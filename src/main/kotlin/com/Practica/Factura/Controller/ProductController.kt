@@ -4,6 +4,7 @@ import com.Practica.Factura.Model.Client
 import com.Practica.Factura.Model.Product
 import com.Practica.Factura.Service.ProductService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -16,8 +17,9 @@ class ProductController {
     lateinit var productService: ProductService
 
     @GetMapping
-    fun list ():List <Product>{
-        return productService.list()
+    fun list (product: Product, pageable: Pageable):ResponseEntity<*>{
+        val response=productService.list(pageable,product)
+        return ResponseEntity(response, HttpStatus.OK)
     }
     @PostMapping
     fun save (@RequestBody product: Product): ResponseEntity<Product> {

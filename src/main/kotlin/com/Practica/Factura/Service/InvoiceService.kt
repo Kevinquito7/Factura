@@ -21,6 +21,9 @@ class InvoiceService {
         return invoiceRepository.findAll()
     }
 
+    fun listTotal(value:Double):List<Invoice>{
+        return invoiceRepository.filterTotal(value)
+    }
     fun save(invoice: Invoice): Invoice {
         try{
             clientRepository.findById(invoice.client_id)

@@ -3,6 +3,7 @@ package com.Practica.Factura.Controller
 import com.Practica.Factura.Model.Client
 import com.Practica.Factura.Service.ClientService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 
+
 @RestController
 @RequestMapping("/client")   //endpoint
 class ClientController {
@@ -23,8 +25,9 @@ class ClientController {
     lateinit var clientService: ClientService
 
     @GetMapping
-    fun list ():List <Client>{
-        return clientService.list()
+    fun list (client: Client, pageable: Pageable):ResponseEntity<*>{
+        val response=clientService.list(pageable,client)
+        return ResponseEntity(response, HttpStatus.OK)
     }
     @PostMapping
     fun save (@RequestBody client: Client):ResponseEntity<Client>{
