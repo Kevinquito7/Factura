@@ -17,6 +17,6 @@ class Invoice{
     var id: Long? = null
     var code: String? = null
     var total: Double? = null
-    @Column (name="create_id")
-    var createid: Long? = null
+    var create_at: Date? = null
+    var client_id: Long? = null
 }
