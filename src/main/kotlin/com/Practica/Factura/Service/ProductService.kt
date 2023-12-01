@@ -3,6 +3,8 @@ package com.Practica.Factura.Service
 import com.Practica.Factura.Model.Client
 import com.Practica.Factura.Model.Product
 import com.Practica.Factura.Repository.ProductRepository
+import com.Practica.Factura.dto.ProductDto
+import com.Practica.Factura.mapper.ProductMapper
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Example
 import org.springframework.data.domain.ExampleMatcher
@@ -23,6 +25,19 @@ class ProductService {
             .withIgnoreNullValues()
             .withMatcher(("description"), ExampleMatcher.GenericPropertyMatchers.contains().ignoreCase())
         return productRepository.findAll(Example.of(product, matcher), pageable)
+    }
+
+    fun productList(): List<ProductDto> {
+        val productList = productRepository.findAll()
+
+        val productDtoList: MutableList<ProductDto> = mutableListOf()
+
+        for (product in productList) {
+            val productDto = ProductMapper.mapToDto(product)
+            productDtoList.add(productDto)
+        }
+
+        return productDtoList
     }
     fun save(product: Product): Product {
         try{

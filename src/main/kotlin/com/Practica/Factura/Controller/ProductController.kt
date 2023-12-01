@@ -3,6 +3,7 @@ package com.Practica.Factura.Controller
 import com.Practica.Factura.Model.Client
 import com.Practica.Factura.Model.Product
 import com.Practica.Factura.Service.ProductService
+import com.Practica.Factura.dto.ProductDto
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
@@ -20,6 +21,10 @@ class ProductController {
     fun list (product: Product, pageable: Pageable):ResponseEntity<*>{
         val response=productService.list(pageable,product)
         return ResponseEntity(response, HttpStatus.OK)
+    }
+    @GetMapping("/product-projection")
+    fun listDto(): List<ProductDto> {
+        return productService.productList()
     }
     @PostMapping
     fun save (@RequestBody product: Product): ResponseEntity<Product> {
