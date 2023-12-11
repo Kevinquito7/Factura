@@ -2,6 +2,7 @@ package com.Practica.Factura.Service
 
 import com.Practica.Factura.Model.Client
 import com.Practica.Factura.Model.Detail
+import com.Practica.Factura.Model.Product
 import com.Practica.Factura.Repository.ClientRepository
 import com.Practica.Factura.Repository.DetailRepository
 import com.Practica.Factura.Repository.ProductRepository
@@ -23,16 +24,28 @@ class DetailService {
     }
 
     fun save(detail: Detail): Detail{
-        try{
-            productRepository.findById(detail.product_id)
+            val response= detailRepository.save(detail)
+            val product= productRepository.findById(detail.product_id)
+        product?.apply {
+            stock = stock?.minus(detail.quantity!!)
+        }
+            productRepository.save(product!!)
+
+        return  detailRepository.save(detail)
+        }
+
+    /*val response= detailRepo.save (detail)
+    Disminuir stock
+    val product= productRepo.findId(product_id)
+    //Esto es del ejericio anterior
+   productRepository.findById(detail.product_id)
                 ?: throw Exception ("Id del producto no encontrada")
             return detailRepository.save(detail)
         }
         catch (ex:Exception){
             throw ResponseStatusException(HttpStatus.NOT_FOUND,ex.message)
         }
-
-    }
+     */
     fun update(detail: Detail): Detail{
         try {
             detailRepository.findById(detail.id)
