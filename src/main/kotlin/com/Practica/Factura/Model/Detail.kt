@@ -16,7 +16,6 @@ class Detail{
     var id: Long? = null
     var quantity: Long? = null
     var price: Double? = null
-
     var invoice_id: Long? = null
     var product_id: Long? = null
 }
