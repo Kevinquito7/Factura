@@ -27,37 +27,43 @@ class DetailService {
         return detailRepository.findAll()
     }
 
-    fun save(detail: Detail):Detail{
+    fun save(detail: Detail): Detail {
         try {
-            // Verification logic for invoice and product existence
-            detail.invoice_id?.let { invoiceId ->
-                if (!invoiceRepository.existsById(invoiceId)) {
-                    throw ResponseStatusException(HttpStatus.NOT_FOUND, "Invoice not found for id: $invoiceId")
-                }
+            val product = productRepository.findById(detail.product_id)
+                ?: throw Exception("Id del producto no encontrada")
+
+            val invoicetoVP =invoiceRepository.findById(detail.invoice_id)
+
+            invoiceRepository.findById(detail.invoice_id)
+                ?: throw Exception("Id invoice no encontrada")
+
+            detailRepository.findById(detail.id)
+                ?: throw Exception("Id detail no encontrada")
+
+            val savedDetail = detailRepository.save(detail)
+            var sum = 0.0
+            val listinvoice = detailRepository.findByInvoiceId(detail.invoice_id)
+            listinvoice.map { items ->
+                sum += (detail.price!!.times(detail.quantity!!))
+
             }
 
-            detail.product_id?.let { productId ->
-                if (!productRepository.existsById(productId)) {
-                    throw ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found for id: $productId")
-                }
-            }
-            val response = detailRepository.save(detail)
-            //logica disminuir detail
-            val product = productRepository.findById(detail.product_id)
-            product?.apply {
+
+            product.apply {
                 stock = stock?.minus(detail.quantity!!)
             }
-            productRepository.save(product!!)
-            return response
+            invoicetoVP?.apply {
+                total = sum
+            }
+            invoiceRepository.save(invoicetoVP!!)
 
-            // Save the detail
-            return detailRepository.save(detail)
+            productRepository.save(product)
+
+            return savedDetail
         } catch (ex: Exception) {
-            // Handle exceptions by wrapping them in a ResponseStatusException
-            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error processing the request", ex)
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, ex.message)
+        }
 
-
-    }
 
         }
 
@@ -147,4 +153,3 @@ class DetailService {
 
 
         }
-    
