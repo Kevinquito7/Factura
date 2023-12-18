@@ -16,6 +16,8 @@ class Detail{
     var id: Long? = null
     var quantity: Long? = null
     var price: Double? = null
-    var invoice_id: Long? = null
-    var product_id: Long? = null
+    @Column (name = "invoice_id")
+    var invoiceId: Long? = null
+    @Column (name="product_id")
+    var productId: Long? = null
 }

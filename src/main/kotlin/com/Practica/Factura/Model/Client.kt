@@ -17,4 +17,5 @@ class Client{
     var nui: String? = null
     var fullname: String? = null
     var address: String? = null
+    var email: String? = null
 }

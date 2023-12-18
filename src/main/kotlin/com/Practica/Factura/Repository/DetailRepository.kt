@@ -9,8 +9,7 @@ import org.springframework.stereotype.Repository
 interface DetailRepository : JpaRepository<Detail, Long?> {
 
     fun findById (id: Long?): Detail?
-
     @Query(nativeQuery = true)
     fun filterPrice(value:Double):List<Detail>
-    fun findByInvoiceId(invoice_id:Long?):List<Detail>
+    fun findByInvoiceId(invoiceId: Long?): List<Detail>
 }
