@@ -14,86 +14,98 @@ import org.springframework.web.server.ResponseStatusException
 @Service
 class DetailService {
     @Autowired
-    lateinit var detailRepository: DetailRepository
-
-    @Autowired
     lateinit var invoiceRepository: InvoiceRepository
-
     @Autowired
     lateinit var productRepository: ProductRepository
+    @Autowired
+    lateinit var detailRepository: DetailRepository
 
-    fun list(): List<Detail> {
+    fun list ():List<Detail>{
         return detailRepository.findAll()
     }
-    fun listById (id:Long?):Detail?{
-        return detailRepository.findById(id)
-    }
 
-    fun listByPrice(value: Double): List<Detail> {
-        return detailRepository.filterPrice(value)
-    }
-
-
-    fun save(detail: Detail): Detail {
+    fun save(detail: Detail):Detail{
         try {
-            val product = productRepository.findById(detail.productId)
-                ?: throw Exception("Id del producto no encontrada")
-
-            val invoicetoVP = invoiceRepository.findById(detail.invoiceId)
-
-            invoiceRepository.findById(detail.invoiceId)
-                ?: throw Exception("Id invoice no encontrada")
-
-            detailRepository.findById(detail.id)
-                ?: throw Exception("Id detail no encontrada")
-
-            val savedDetail = detailRepository.save(detail)
-            var sum = 0.0
-            val listinvoice = detailRepository.findByInvoiceId(detail.invoiceId)
-            listinvoice.map {items ->
-                sum += (detail.price!!.times(detail.quantity!!))
-
+            // Verification logic for invoice and product existence
+            detail.invoiceId?.let { invoiceId ->
+                if (!invoiceRepository.existsById(invoiceId)) {
+                    throw ResponseStatusException(HttpStatus.NOT_FOUND, "Invoice not found for id: $invoiceId")
+                }
             }
 
-
-            product.apply {
+            detail.productId?.let { productId ->
+                if (!productRepository.existsById(productId)) {
+                    throw ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found for id: $productId")
+                }
+            }//codigo hecho por mi.
+            val response = detailRepository.save(detail)
+            //logica disminuir detail
+            val product = productRepository.findById(detail.productId)
+            product?.apply{
                 stock = stock?.minus(detail.quantity!!)
             }
-            invoicetoVP?.apply {
-                total = sum
+            productRepository.save(product!!)
+
+            //productos que se multipliquen y muestre en total
+            val listDetail = detailRepository.findByInvoiceId(detail.invoiceId)
+
+            if (listDetail != null) {
+                var suma = 0
+
+                /*listDetail.forEach { element ->
+                    suma += ((element.price ?: 0L) * (element.quantity ?: 0L)).toInt()
+                    // Multiplico y agrego a la suma
+                }*/
+                val invoiceToUp = invoiceRepository.findById(detail.invoiceId)
+                invoiceToUp?.apply {
+                    total = suma.toDouble()
+                }
+                invoiceRepository.save(invoiceToUp!!)
             }
-            invoiceRepository.save(invoicetoVP!!)
+            // Save the detail
+            return detailRepository.save(detail)
 
-            productRepository.save(product)
-
-            return savedDetail
         } catch (ex: Exception) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, ex.message)
+            // Handle exceptions by wrapping them in a ResponseStatusException
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error processing the request", ex)
         }
 
     }
 
     fun update(detail: Detail): Detail {
         try {
-            detailRepository.findById(detail.id)
-                ?: throw Exception("ID no existe")
+            val existingDetail = detailRepository.findById(detail.id)
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "ID no existe")
 
-            return detailRepository.save(detail)
+            val originalQuantity = existingDetail.quantity!!
+            val updatedQuantity = detail.quantity!!
+
+            val quantityDifference = updatedQuantity - originalQuantity
+
+            val product = productRepository.findById(existingDetail.productId)
+            product?.apply {
+                stock = stock?.plus(quantityDifference)
+            }
+            productRepository.save(product!!)
+
+            existingDetail.quantity = updatedQuantity
+            return detailRepository.save(existingDetail)
         } catch (ex: Exception) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, ex.message)
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al actualizar el detalle", ex)
         }
     }
 
-    fun updateName(detail: Detail): Detail {
-        try {
+    fun updateName(detail: Detail): Detail{
+        try{
             val response = detailRepository.findById(detail.id)
                 ?: throw Exception("ID no existe")
             response.apply {
-                quantity = detail.quantity //un atributo del modelo
+                quantity=detail.quantity //un atributo del modelo
             }
             return detailRepository.save(response)
-        } catch (ex: Exception) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, ex.message)
+        }
+        catch (ex:Exception){
+            throw ResponseStatusException(HttpStatus.NOT_FOUND,ex.message)
         }
     }
 
@@ -110,11 +122,13 @@ class DetailService {
 
             detailRepository.deleteById(id!!)
 
-            return true
+            return true // Puedes ajustar el tipo de retorno según tus necesidades
         } catch (ex: Exception) {
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al eliminar el detalle", ex)
         }
-
-
     }
+    fun listById (id:Long?): Detail?{
+        return detailRepository.findById(id)
+    }
+
 }

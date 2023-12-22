@@ -13,10 +13,10 @@ import org.springframework.web.server.ResponseStatusException
 @Service
 class InvoiceService {
     @Autowired
+    lateinit var clientRepository: ClientRepository
+    @Autowired
     lateinit var invoiceRepository: InvoiceRepository
 
-    @Autowired
-    lateinit var clientRepository: ClientRepository
     fun list ():List<Invoice>{
         return invoiceRepository.findAll()
     }
@@ -24,16 +24,16 @@ class InvoiceService {
     fun listTotal(value:Double):List<Invoice>{
         return invoiceRepository.filterTotal(value)
     }
-    fun save(invoice: Invoice): Invoice {
-        try{
-            clientRepository.findById(invoice.client_id)
-                ?:throw Exception("Id del cliente no encontrada")
-            return invoiceRepository.save(invoice)
-        }
-        catch (ex:Exception){
-            throw ResponseStatusException(HttpStatus.NOT_FOUND,ex.message)
-        }
 
+    fun save(invoice: Invoice): Invoice {
+        try {
+            clientRepository.findById(invoice.client_id)
+                ?: throw Exception("Id del cliente no encontrados")
+            return invoiceRepository.save(invoice)
+        }catch (ex : Exception){
+            throw ResponseStatusException(
+                HttpStatus.NOT_FOUND, ex.message, ex)
+        }
     }
     fun update(invoice: Invoice): Invoice {
         try {
@@ -61,12 +61,8 @@ class InvoiceService {
         }
     }
 
-    fun listById (id:Long?): Invoice?{
-        return invoiceRepository.findById(id)
-    }
-
     fun delete (id: Long?):Boolean?{
-        try {
+        try{
             val response = invoiceRepository.findById(id)
                 ?: throw Exception("ID no existe")
             invoiceRepository.deleteById(id!!)
@@ -76,4 +72,8 @@ class InvoiceService {
             throw ResponseStatusException(HttpStatus.NOT_FOUND,ex.message)
         }
     }
+    fun listById (id:Long?): Invoice?{
+        return invoiceRepository.findById(id)
+    }
+
 }

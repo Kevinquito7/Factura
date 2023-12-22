@@ -20,10 +20,10 @@ class ProductService {
     @Autowired
     lateinit var productRepository: ProductRepository
 
-    fun list (pageable: Pageable, product: Product): Page<Product> {
+    fun list (pageable: Pageable,product: Product):Page<Product>{
         val matcher = ExampleMatcher.matching()
             .withIgnoreNullValues()
-            .withMatcher(("description"), ExampleMatcher.GenericPropertyMatchers.contains().ignoreCase())
+            .withMatcher(("field"), ExampleMatcher.GenericPropertyMatchers.contains().ignoreCase())
         return productRepository.findAll(Example.of(product, matcher), pageable)
     }
 
@@ -39,15 +39,18 @@ class ProductService {
 
         return productDtoList
     }
+
     fun save(product: Product): Product {
-        try{
+        try {
+            product.stock?.takeIf { it >= 0 }
+                ?: throw IllegalArgumentException("Stock no debe ser menor a cero")
             return productRepository.save(product)
         }
         catch (ex:Exception){
             throw ResponseStatusException(HttpStatus.NOT_FOUND,ex.message)
         }
-
     }
+
     fun update(product: Product): Product {
         try {
             productRepository.findById(product.id)
@@ -65,7 +68,7 @@ class ProductService {
             val response = productRepository.findById(product.id)
                 ?: throw Exception("ID no existe")
             response.apply {
-                description=product.description //un atributo del model
+                description=product.description
             }
             return productRepository.save(response)
         }
@@ -74,13 +77,10 @@ class ProductService {
         }
     }
 
-    fun listById (id:Long?): Product?{
-        return productRepository.findById(id)
-    }
-
     fun delete (id: Long?):Boolean?{
-        try {
+        try{
             val response = productRepository.findById(id)
+
                 ?: throw Exception("ID no existe")
             productRepository.deleteById(id!!)
             return true
@@ -89,5 +89,9 @@ class ProductService {
             throw ResponseStatusException(HttpStatus.NOT_FOUND,ex.message)
         }
     }
+    fun listById (id:Long?): Product?{
+        return productRepository.findById(id)
+    }
+
 
 }
