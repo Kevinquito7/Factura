@@ -1,8 +1,10 @@
 package com.Practica.Factura.config
 
+
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.config.Customizer
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration
@@ -16,7 +18,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 class SecurityConfig {
-
     @Autowired
     private val jwtFilter: JwtFilter? = null
 
@@ -30,7 +31,13 @@ class SecurityConfig {
             .authorizeHttpRequests{authRequest->
                 authRequest
                     .requestMatchers("/auth/**").permitAll()
-                    .anyRequest().authenticated()
+                    .requestMatchers(HttpMethod.GET,"/producto/**").hasAnyRole("admin", "assistant")
+                    .requestMatchers(HttpMethod.GET,"/invoice/**").hasAnyRole("admin","assistant")
+                    .requestMatchers(HttpMethod.GET,"/detail/**").hasAnyRole("assistant")
+                    .requestMatchers(HttpMethod.POST,"/client/**").hasAnyRole("admin")
+                    .anyRequest().denyAll()
+
+
             }
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter::class.java)
 
